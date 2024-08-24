@@ -12,19 +12,20 @@ import com.aliduman.app_instagram.IgViewModel
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun FeedScreen(navController: NavController, vm: IgViewModel) {
+fun SearchScreen(vm: IgViewModel, navController: NavController) {
     Scaffold {
         Column(modifier = Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier.weight(1f)
             ) {
-                Text(text = "FeedScreen")
+                Text(text = "SearchScreen")
             }
 
             BottomNavigationMenu(
-                selectedItem = BottomNavigationItem.FEED,
+                selectedItem = BottomNavigationItem.SEARCH,
                 navController = navController
             )
         }
     }
+
 }

@@ -1,5 +1,6 @@
 package com.aliduman.app_instagram.auth
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -14,6 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -31,66 +33,85 @@ import androidx.navigation.NavController
 import com.aliduman.app_instagram.DestinationScreen
 import com.aliduman.app_instagram.IgViewModel
 import com.aliduman.app_instagram.R
+import com.aliduman.app_instagram.main.CheckSignedIn
 import com.aliduman.app_instagram.main.CommonProgressSpinner
 import com.aliduman.app_instagram.main.navigateTo
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun LoginScreen(
     navController: NavController,
     vm: IgViewModel
 ) {
-    val focus = LocalFocusManager.current
+    CheckSignedIn(vm = vm, navController = navController)
 
+    val focus = LocalFocusManager.current  // Close keyboard
 
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight()
-                .verticalScroll(
-                    rememberScrollState()
-                ),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            val emailState = remember { mutableStateOf("") }
-            val passState = remember { mutableStateOf("") }
-
-            Image(
-                painter = painterResource(id = R.drawable.ig_logo),
-                contentDescription = "instagram logo",
+    Scaffold {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Column(
                 modifier = Modifier
-                    .width(250.dp)
-                    .padding(top = 16.dp)
-                    .padding(8.dp)
-            )
-            Text(text = "Login", modifier = Modifier.padding(8.dp), fontSize = 30.sp, fontFamily = FontFamily.Serif)
-            OutlinedTextField(value = emailState.value, onValueChange = { emailState.value = it}, label = {Text(text = "Email")})
-            OutlinedTextField(value = passState.value, onValueChange = { passState.value = it}, label = {Text(text = "Password")}, visualTransformation = PasswordVisualTransformation())
-            Button(
-                onClick = {
-                    focus.clearFocus(force = true)
-                    vm.onLogin(emailState.value, passState.value)
-                },
-                modifier = Modifier.padding(8.dp)
+                    .fillMaxWidth()
+                    .padding(top = it.calculateTopPadding())
+                    .wrapContentHeight()
+                    .verticalScroll(
+                        rememberScrollState()
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                Text(text = "LOGIN")
+                val emailState = remember { mutableStateOf("") }
+                val passState = remember { mutableStateOf("") }
+
+                Image(
+                    painter = painterResource(id = R.drawable.ig_logo),
+                    contentDescription = "instagram logo",
+                    modifier = Modifier
+                        .width(250.dp)
+                        .padding(top = 16.dp)
+                        .padding(8.dp)
+                )
+                Text(
+                    text = "Login",
+                    modifier = Modifier.padding(8.dp),
+                    fontSize = 30.sp,
+                    fontFamily = FontFamily.Serif
+                )
+                OutlinedTextField(
+                    value = emailState.value,
+                    onValueChange = { emailState.value = it },
+                    label = { Text(text = "Email") })
+                OutlinedTextField(
+                    value = passState.value,
+                    onValueChange = { passState.value = it },
+                    label = { Text(text = "Password") },
+                    visualTransformation = PasswordVisualTransformation()
+                )
+                Button(
+                    onClick = {
+                        focus.clearFocus(force = true)
+                        vm.onLogin(emailState.value, passState.value)
+                    },
+                    modifier = Modifier.padding(8.dp)
+                ) {
+                    Text(text = "LOGIN")
+                }
+
+                Text(
+                    text = "New here? Go to signup ->",
+                    color = Color.Blue,
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .clickable {
+                            navigateTo(navController, DestinationScreen.Singup)
+                        }
+                )
+
             }
-
-            Text(
-                text = "New here? Go to signup ->",
-                color = Color.Blue,
-                modifier = Modifier
-                    .padding(8.dp)
-                    .clickable {
-                        navigateTo(navController, DestinationScreen.Singup)
-                    }
-            )
-
-        }
-        val isLoading = vm.inProgress.value
-        if (isLoading) {
-            CommonProgressSpinner()
+            val isLoading = vm.inProgress.value
+            if (isLoading) {
+                CommonProgressSpinner()
+            }
         }
     }
 }
