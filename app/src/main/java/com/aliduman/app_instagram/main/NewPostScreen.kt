@@ -37,12 +37,12 @@ fun NewPostScreen(navController: NavController, vm: IgViewModel, encodedUri: Str
     val scrollState = rememberScrollState()
     val focusManager = LocalFocusManager.current
 
-    Scaffold {
+    Scaffold { padding ->
         Column(
             modifier = Modifier
                 .verticalScroll(scrollState)
                 .fillMaxWidth()
-                .padding(top = it.calculateTopPadding())
+                .padding(padding)
         ) {
             Row(
                 modifier = Modifier

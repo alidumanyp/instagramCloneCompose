@@ -15,6 +15,7 @@ import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
 
@@ -35,6 +36,9 @@ class IgViewModel @Inject constructor(
 
     val refreshPostsProgress = mutableStateOf(false)//like in progress
     val posts = mutableStateOf<List<PostData>>(listOf())
+
+    val searchedPosts = mutableStateOf<List<PostData>>(listOf())
+    val searchInProgress = mutableStateOf(false)
 
 
     init {
@@ -235,6 +239,13 @@ class IgViewModel @Inject constructor(
         signedIn.value = false
         userData.value = null
         popupNotification.value = Event("Logged out successfully")
+        searchedPosts.value = listOf()
+        //delte below if any problems
+        posts.value = listOf()
+        refreshPostsProgress.value = false
+        searchInProgress.value = false
+        inProgress.value = false
+        Log.d("myuserdata", "logout")
     }
 
     fun onNewPost(uri: Uri, description: String, onPostSuccess: () -> Unit) {
@@ -255,6 +266,43 @@ class IgViewModel @Inject constructor(
 
         if (currentUid != null) {
             val postId = UUID.randomUUID().toString()
+
+            val fillerWords = listOf(
+                "the",
+                "is",
+                "be",
+                "to",
+                "of",
+                "and",
+                "a",
+                "in",
+                "that",
+                "have",
+                "I",
+                "it",
+                "for",
+                "not",
+                "on",
+                "with",
+                "he",
+                "as",
+                "you",
+                "do",
+                "at",
+                "this",
+                "but",
+                "his",
+                "by",
+                "from",
+                "they"
+            )
+            val searchTerms =
+                description
+                    .orEmpty()
+                    .split(" ", ".", "!", "?", ",", ";", ":", "(", ")")
+                    .map { it.lowercase(Locale.getDefault()) }
+                    .filter { it.isNotEmpty() && !fillerWords.contains(it) }
+
             val post = PostData(
                 postId = postId,
                 userId = currentUid,
@@ -263,7 +311,8 @@ class IgViewModel @Inject constructor(
                 postImage = imageUrl.toString(),
                 postDescription = description,
                 time = System.currentTimeMillis(),
-                likes = listOf<String>()
+                likes = listOf<String>(),
+                searchTerms = searchTerms
             )
             firestore.collection(POSTS).document(postId).set(post)
                 .addOnSuccessListener {
@@ -314,5 +363,45 @@ class IgViewModel @Inject constructor(
         val sortedPosts = posts.sortedByDescending { it.time }
         outState.value = sortedPosts
     }
+
+    fun searchPosts(searchTerm: String) {
+        if (searchTerm.isEmpty()) {
+            searchedPosts.value = listOf()
+            return
+        } else {
+            searchInProgress.value = true
+            firestore.collection(POSTS)
+                .whereArrayContains("searchTerms", searchTerm.trim().lowercase())
+                .get()
+                .addOnSuccessListener {
+                    convertPosts(it, searchedPosts)
+                    searchInProgress.value = false
+                }
+                .addOnFailureListener {
+                    handleException(it, "Can't search posts")
+                    searchInProgress.value = false
+                }
+
+        }
+    }
+
+    fun onFollowClick(userId: String) {
+        auth.currentUser?.uid?.let { uid ->
+            val following = arrayListOf<String>()
+            userData.value?.following?.let {
+                following.addAll(it)
+            }
+            if (following.contains(userId)) {
+                following.remove(userId)
+            } else {
+                following.add(userId)
+            }
+            firestore.collection(USERS).document(uid).update("following", following)
+                .addOnSuccessListener {
+                    getUserData(uid)
+                }
+        }
+    }
+
 
 }

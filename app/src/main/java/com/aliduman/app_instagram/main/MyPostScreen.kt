@@ -78,9 +78,10 @@ fun MyPostScreen(navController: NavController, vm: IgViewModel) {
     val postLoading = vm.refreshPostsProgress.value
     val posts = vm.posts.value
 
-    Scaffold {
+    Scaffold { padding ->
         Column(
-            modifier = Modifier.padding(top = it.calculateTopPadding())
+            modifier = Modifier
+                .padding(padding)
         ) {
             Column(
                 modifier = Modifier.weight(1f)

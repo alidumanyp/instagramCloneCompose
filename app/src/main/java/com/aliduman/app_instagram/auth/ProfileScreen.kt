@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -31,7 +32,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.aliduman.app_instagram.DestinationScreen
@@ -46,7 +46,7 @@ import com.aliduman.app_instagram.main.navigateTo
 fun ProfileScreen(navController: NavController, vm: IgViewModel) {
     val isLoading = vm.inProgress.value
 
-    Scaffold{
+    Scaffold { padding ->
         if (isLoading) {
             CommonProgressSpinner()
         } else {
@@ -61,7 +61,7 @@ fun ProfileScreen(navController: NavController, vm: IgViewModel) {
                 name = name,
                 username = username,
                 bio = bio,
-                paddingTop = it.calculateTopPadding(),
+                padding = padding,
                 onNameChanged = { name = it },
                 onUsernameChanged = { username = it },
                 onBioChanged = { bio = it },
@@ -83,7 +83,7 @@ fun ProfileScreenContent(
     name: String,
     username: String,
     bio: String,
-    paddingTop: Dp,
+    padding: PaddingValues,
     onNameChanged: (String) -> Unit = {},
     onUsernameChanged: (String) -> Unit = {},
     onBioChanged: (String) -> Unit = {},
@@ -97,9 +97,7 @@ fun ProfileScreenContent(
     Column(
         modifier = Modifier
             .verticalScroll(scroolState)
-            .padding(8.dp)
-            .padding(top = 16.dp)
-            .padding(top = paddingTop)
+            .padding(padding)
     ) {
         Row(
             modifier = Modifier

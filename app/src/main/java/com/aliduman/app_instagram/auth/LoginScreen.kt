@@ -47,12 +47,12 @@ fun LoginScreen(
 
     val focus = LocalFocusManager.current  // Close keyboard
 
-    Scaffold {
+    Scaffold { padding ->
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = it.calculateTopPadding())
+                    .padding(padding)
                     .wrapContentHeight()
                     .verticalScroll(
                         rememberScrollState()
