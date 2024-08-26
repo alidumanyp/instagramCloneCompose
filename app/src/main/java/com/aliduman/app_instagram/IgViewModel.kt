@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import com.aliduman.app_instagram.data.CommentData
 import com.aliduman.app_instagram.data.Event
 import com.aliduman.app_instagram.data.PostData
 import com.aliduman.app_instagram.data.UserData
@@ -39,6 +40,12 @@ class IgViewModel @Inject constructor(
 
     val searchedPosts = mutableStateOf<List<PostData>>(listOf())
     val searchInProgress = mutableStateOf(false)
+
+    val postsFeed = mutableStateOf<List<PostData>>(listOf())
+    val postsFeedLoading = mutableStateOf(false)
+
+    val comments = mutableStateOf<List<CommentData>>(listOf())
+    val commentsLoading = mutableStateOf(false)
 
 
     init {
@@ -164,6 +171,7 @@ class IgViewModel @Inject constructor(
                 userData.value = user
                 inProgress.value = false
                 refreshPosts()
+                getPersonalizedFeed()
                 println("succesfully get userdata")
             }.addOnFailureListener {
                 Log.d("myuserdata", "failed getUserData")
@@ -240,6 +248,8 @@ class IgViewModel @Inject constructor(
         userData.value = null
         popupNotification.value = Event("Logged out successfully")
         searchedPosts.value = listOf()
+        postsFeed.value = listOf()
+        comments.value = listOf()
         //delte below if any problems
         posts.value = listOf()
         refreshPostsProgress.value = false
@@ -400,6 +410,72 @@ class IgViewModel @Inject constructor(
                 .addOnSuccessListener {
                     getUserData(uid)
                 }
+        }
+    }
+
+    private fun getPersonalizedFeed() {
+        val following = userData.value?.following
+        if (!following.isNullOrEmpty()) {
+            postsFeedLoading.value = true
+            firestore.collection(POSTS).whereIn("userId", following).get()
+                .addOnSuccessListener {
+                    convertPosts(it, postsFeed)
+                    if (postsFeed.value.isEmpty()) {
+                        getGeneralFeed()
+                    } else {
+                        postsFeedLoading.value = false
+                    }
+                }
+                .addOnFailureListener {
+                    handleException(it, "Can't get personalized feeds")
+                    postsFeedLoading.value = false
+                }
+        } else {
+            getGeneralFeed()
+        }
+
+    }
+
+    private fun getGeneralFeed() {
+        val currentTime = System.currentTimeMillis()
+        val difference = 24 * 60 * 60 * 1000 // 1 day in millis
+        firestore.collection(POSTS).whereGreaterThan("time", currentTime - difference).get()
+            .addOnSuccessListener {
+                convertPosts(it, postsFeed)
+                postsFeedLoading.value = false
+            }
+            .addOnFailureListener {
+                handleException(it, "Can't get general feed")
+                postsFeedLoading.value = false
+            }
+    }
+
+    fun onLikePost(postData: PostData) {
+        auth.currentUser?.uid?.let { userId ->
+            postData.likes?.let { likes ->
+                val newLikes = arrayListOf<String>()
+                if (likes.contains(userId)) {
+                    newLikes.addAll(likes.filter { userId != it })
+                } else {
+                    newLikes.addAll(likes)
+                    newLikes.add(userId)
+                }
+                postData.postId?.let { postId ->
+                    firestore.collection(POSTS).document(postId).update("likes", newLikes)
+                        .addOnSuccessListener {
+                            postData.likes = newLikes
+                        }
+                        .addOnFailureListener {
+                            handleException(it, "Unable to like post")
+                        }
+                }
+            }
+        }
+    }
+
+    fun createComment(post: String, text: String) {
+        userData.value?.username?.let {
+
         }
     }
 
