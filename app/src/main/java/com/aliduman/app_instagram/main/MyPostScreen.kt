@@ -78,6 +78,8 @@ fun MyPostScreen(navController: NavController, vm: IgViewModel) {
     val postLoading = vm.refreshPostsProgress.value
     val posts = vm.posts.value
 
+    val followers = vm.followers.value
+
     Scaffold { padding ->
         Column(
             modifier = Modifier
@@ -91,21 +93,21 @@ fun MyPostScreen(navController: NavController, vm: IgViewModel) {
                         newPostImageLauncher.launch("image/*")
                     }
                     Text(
-                        text = "15\nposts",
+                        text = "${posts.size}\n posts",
                         modifier = Modifier
                             .weight(1f)
                             .align(Alignment.CenterVertically),
                         textAlign = TextAlign.Center
                     )
                     Text(
-                        text = "54\nfollowers",
+                        text = "${vm.followers.value.size}\nfollowers",
                         modifier = Modifier
                             .weight(1f)
                             .align(Alignment.CenterVertically),
                         textAlign = TextAlign.Center
                     )
                     Text(
-                        text = "93\nfollowing",
+                        text = "${userData?.following?.size ?: 0}\nfollowing",
                         modifier = Modifier
                             .weight(1f)
                             .align(Alignment.CenterVertically),

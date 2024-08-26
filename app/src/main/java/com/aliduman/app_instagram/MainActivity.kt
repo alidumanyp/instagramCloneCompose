@@ -13,6 +13,7 @@ import com.aliduman.app_instagram.auth.LoginScreen
 import com.aliduman.app_instagram.auth.ProfileScreen
 import com.aliduman.app_instagram.auth.SingupScreen
 import com.aliduman.app_instagram.data.PostData
+import com.aliduman.app_instagram.main.CommentScreen
 import com.aliduman.app_instagram.main.FeedScreen
 import com.aliduman.app_instagram.main.MyPostScreen
 import com.aliduman.app_instagram.main.NewPostScreen
@@ -47,6 +48,10 @@ sealed class DestinationScreen(val route: String) {
     }
 
     object SinglePost : DestinationScreen("singlepost")
+    object CommentScreen : DestinationScreen("comment/{postId}") {
+        fun createRoute(postId: String) = "comment/$postId"
+    }
+
 }
 
 @Composable
@@ -87,6 +92,13 @@ fun InstagramApp() {
             postData?.let {
                 SinglePostScreen(navController = navController, vm = vm, post = postData)
             }
+        }
+        composable(DestinationScreen.CommentScreen.route) { navBackStackEntry ->
+            val postId = navBackStackEntry.arguments?.getString("postId")
+            postId?.let { postId ->
+                CommentScreen(navController = navController, vm = vm, postId = postId)
+            }
+
         }
 
 

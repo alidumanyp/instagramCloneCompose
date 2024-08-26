@@ -203,9 +203,7 @@ fun ProfileImage(
             uri?.let {
                 vm.uploadProfileImage(it)
             }
-
         }
-
 
     Box(modifier = Modifier.height(IntrinsicSize.Min)) {
         Column(

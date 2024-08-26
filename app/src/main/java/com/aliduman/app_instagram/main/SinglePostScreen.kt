@@ -17,6 +17,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,6 +27,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.aliduman.app_instagram.DestinationScreen
 import com.aliduman.app_instagram.IgViewModel
 import com.aliduman.app_instagram.R
 import com.aliduman.app_instagram.data.PostData
@@ -33,6 +35,12 @@ import com.aliduman.app_instagram.data.PostData
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun SinglePostScreen(navController: NavController, vm: IgViewModel, post: PostData) {
+
+    val comments = vm.comments.value
+
+    LaunchedEffect(key1 = Unit) {
+        vm.getComments(post.postId)
+    }
 
     Scaffold { padding ->
         post.userId?.let {
@@ -44,7 +52,12 @@ fun SinglePostScreen(navController: NavController, vm: IgViewModel, post: PostDa
             ) {
                 Text(text = "Back", modifier = Modifier.clickable { navController.popBackStack() })
                 CommonDivider()
-                SinglePostDisplay(navController = navController, vm = vm, post = post)
+                SinglePostDisplay(
+                    navController = navController,
+                    vm = vm,
+                    post = post,
+                    nbComments = comments.size
+                )
             }
         }
     }
@@ -52,7 +65,12 @@ fun SinglePostScreen(navController: NavController, vm: IgViewModel, post: PostDa
 }
 
 @Composable
-fun SinglePostDisplay(navController: NavController, vm: IgViewModel, post: PostData) {
+fun SinglePostDisplay(
+    navController: NavController,
+    vm: IgViewModel,
+    post: PostData,
+    nbComments: Int
+) {
     val userData = vm.userData.value
     Box(
         modifier = Modifier
@@ -123,7 +141,19 @@ fun SinglePostDisplay(navController: NavController, vm: IgViewModel, post: PostD
     }
 
     Row(modifier = Modifier.padding(8.dp)) {
-        Text(text = "10 comments", color = Color.Gray, modifier = Modifier.padding(start = 8.dp))
+        Text(
+            text = if (nbComments == 0 || nbComments == 1) "$nbComments comment" else "$nbComments comments",
+            color = Color.Gray,
+            modifier = Modifier
+                .padding(start = 8.dp)
+                .clickable {
+                    post.postId?.let { postId ->
+                        navController.navigate(DestinationScreen.CommentScreen.createRoute(postId))
+                    }
+
+                }
+
+        )
     }
 
 }

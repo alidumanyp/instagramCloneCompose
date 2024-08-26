@@ -22,6 +22,7 @@ import javax.inject.Inject
 
 const val USERS = "users"
 const val POSTS = "posts"
+const val COMMENTS = "comments"
 
 @HiltViewModel
 class IgViewModel @Inject constructor(
@@ -47,6 +48,7 @@ class IgViewModel @Inject constructor(
     val comments = mutableStateOf<List<CommentData>>(listOf())
     val commentsLoading = mutableStateOf(false)
 
+    val followers = mutableStateOf<List<UserData>>(listOf())
 
     init {
         //auth.signOut()
@@ -172,6 +174,7 @@ class IgViewModel @Inject constructor(
                 inProgress.value = false
                 refreshPosts()
                 getPersonalizedFeed()
+                getFollowers(user?.userId)
                 println("succesfully get userdata")
             }.addOnFailureListener {
                 Log.d("myuserdata", "failed getUserData")
@@ -473,11 +476,60 @@ class IgViewModel @Inject constructor(
         }
     }
 
-    fun createComment(post: String, text: String) {
-        userData.value?.username?.let {
-
+    fun createComment(postId: String, text: String) {
+        userData.value?.username?.let { username ->
+            val commentId = UUID.randomUUID().toString()
+            val comment = CommentData(
+                commentId = commentId,
+                postId = postId,
+                username = username,
+                text = text,
+                timestamp = System.currentTimeMillis()
+            )
+            firestore.collection(COMMENTS).document(commentId).set(comment)
+                .addOnSuccessListener {
+                    getComments(postId = postId)
+                }
+                .addOnFailureListener {
+                    handleException(it, "can not create comment.")
+                }
         }
     }
+
+    fun getComments(postId: String?) {
+        commentsLoading.value = true
+        firestore.collection(COMMENTS).whereEqualTo("postId", postId).get()
+            .addOnSuccessListener { documents ->
+                val newComments = mutableListOf<CommentData>()
+                for (doc in documents) {
+                    val comment = doc.toObject<CommentData>()
+                    newComments.add(comment)
+                }
+                val sortedComments = newComments.sortedByDescending { it.timestamp }
+                comments.value = sortedComments
+                commentsLoading.value = false
+            }
+            .addOnFailureListener {
+                handleException(it, "can not get comments")
+                commentsLoading.value = false
+            }
+    }
+
+    private fun getFollowers(uid: String?) {
+        firestore.collection(USERS).whereArrayContains("following", uid ?: "").get()
+            .addOnSuccessListener { documents ->
+                val newFollowers = mutableListOf<UserData>()
+                for (doc in documents) {
+                    val user = doc.toObject<UserData>()
+                    newFollowers.add(user)
+                }
+                followers.value = newFollowers
+            }
+            .addOnFailureListener {
+                handleException(it, "can not get followers")
+            }
+    }
+
 
 
 }
